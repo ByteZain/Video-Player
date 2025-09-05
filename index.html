@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Player - Universal Player</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .input-section {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+        }
+        
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #f0f0f0;
+        }
+        
+        .input-group input, .input-group textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            font-size: 14px;
+        }
+        
+        .input-group textarea {
+            min-height: 100px;
+            resize: vertical;
+            font-family: monospace;
+        }
+        
+        .btn {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(45deg, #4ecdc4, #44a08d);
+        }
+        
+        .btn-secondary:hover {
+            box-shadow: 0 5px 15px rgba(78, 205, 196, 0.4);
+        }
+        
+        .player-section {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+            display: none;
+        }
+        
+        .player-container {
+            position: relative;
+            width: 100%;
+            height: 60vh;
+            border-radius: 10px;
+            overflow: hidden;
+            background: #000;
+            margin-bottom: 20px;
+        }
+        
+        .player-container iframe, .player-container video {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        
+        .player-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .info-card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+        }
+        
+        .info-card h3 {
+            color: #4ecdc4;
+            margin-bottom: 8px;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .info-card p {
+            color: #f0f0f0;
+            font-size: 16px;
+            word-break: break-all;
+        }
+        
+        .download-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 20px;
+        }
+        
+        .download-links {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .download-link {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            text-decoration: none;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            transition: all 0.3s ease;
+            display: block;
+        }
+        
+        .download-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .quality-badge {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            margin-bottom: 5px;
+            display: inline-block;
+        }
+        
+        .error {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            display: none;
+        }
+        
+        .success {
+            background: linear-gradient(45deg, #4ecdc4, #44a08d);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            display: none;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+        
+        .fullscreen-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .player-container {
+                height: 40vh;
+            }
+            
+            .player-info {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎬 Universal Video Player</h1>
+            <p>Stream iframe videos or play download links directly</p>
+        </div>
+        
+        <div class="input-section">
+            <h2>🔗 Load Video</h2>
+            
+            <div class="input-group">
+                <label for="videoTitle">Video Title</label>
+                <input type="text" id="videoTitle" placeholder="Enter video title (optional)">
+            </div>
+            
+            <div class="input-group">
+                <label for="iframeUrl">Iframe URL</label>
+                <input type="url" id="iframeUrl" placeholder="https://example.com/embed/video">
+            </div>
+            
+            <div class="input-group">
+                <label for="downloadLinks">Download Links (JSON format)</label>
+                <textarea id="downloadLinks" placeholder='[
+  {"quality": "720p", "size": "45.2MB", "url": "https://example.com/video.mp4"},
+  {"quality": "480p", "size": "23.1MB", "url": "https://example.com/video.mp4"}
+]'></textarea>
+            </div>
+            
+            <div class="controls">
+                <button class="btn" onclick="loadIframe()">📱 Load Iframe</button>
+                <button class="btn btn-secondary" onclick="loadDownloadLinks()">💾 Load Downloads</button>
+                <button class="btn" onclick="clearAll()">🗑️ Clear All</button>
+            </div>
+        </div>
+        
+        <div id="error" class="error"></div>
+        <div id="success" class="success"></div>
+        
+        <div id="playerSection" class="player-section">
+            <div class="player-container" id="playerContainer">
+                <button class="fullscreen-btn" onclick="toggleFullscreen()">⛶ Fullscreen</button>
+                <!-- Video content will be loaded here -->
+            </div>
+            
+            <div class="player-info">
+                <div class="info-card">
+                    <h3>Title</h3>
+                    <p id="displayTitle">No title</p>
+                </div>
+                <div class="info-card">
+                    <h3>Source Type</h3>
+                    <p id="sourceType">Unknown</p>
+                </div>
+                <div class="info-card">
+                    <h3>Current URL</h3>
+                    <p id="currentUrl">No URL loaded</p>
+                </div>
+            </div>
+            
+            <div class="download-section">
+                <h3>📥 Download Options</h3>
+                <div id="downloadLinksContainer" class="download-links">
+                    <p>No download links available</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentVideoData = {
+            title: '',
+            iframeUrl: '',
+            downloadLinks: [],
+            currentSource: null
+        };
+
+        function showError(message) {
+            const errorDiv = document.getElementById('error');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            setTimeout(() => errorDiv.style.display = 'none', 5000);
+        }
+
+        function showSuccess(message) {
+            const successDiv = document.getElementById('success');
+            successDiv.textContent = message;
+            successDiv.style.display = 'block';
+            setTimeout(() => successDiv.style.display = 'none', 3000);
+        }
+
+        function updatePlayerInfo() {
+            document.getElementById('displayTitle').textContent = currentVideoData.title || 'No title';
+            document.getElementById('currentUrl').textContent = currentVideoData.currentSource || 'No URL loaded';
+        }
+
+        function loadIframe() {
+            const iframeUrl = document.getElementById('iframeUrl').value.trim();
+            const title = document.getElementById('videoTitle').value.trim();
+            
+            if (!iframeUrl) {
+                showError('Please enter an iframe URL');
+                return;
+            }
+            
+            try {
+                currentVideoData.title = title;
+                currentVideoData.iframeUrl = iframeUrl;
+                currentVideoData.currentSource = iframeUrl;
+                
+                // Create iframe element
+                const iframe = document.createElement('iframe');
+                iframe.src = iframeUrl;
+                iframe.allowFullscreen = true;
+                iframe.allow = 'autoplay; fullscreen';
+                
+                // Clear and update player container
+                const container = document.getElementById('playerContainer');
+                const fullscreenBtn = container.querySelector('.fullscreen-btn');
+                container.innerHTML = '';
+                container.appendChild(fullscreenBtn);
+                container.appendChild(iframe);
+                
+                // Update UI
+                document.getElementById('sourceType').textContent = 'Iframe Embed';
+                updatePlayerInfo();
+                document.getElementById('playerSection').style.display = 'block';
+                
+                showSuccess('Iframe loaded successfully!');
+                
+            } catch (error) {
+                showError('Error loading iframe: ' + error.message);
+            }
+        }
+
+        function loadDownloadLinks() {
+            const linksText = document.getElementById('downloadLinks').value.trim();
+            const title = document.getElementById('videoTitle').value.trim();
+            
+            if (!linksText) {
+                showError('Please enter download links in JSON format');
+                return;
+            }
+            
+            try {
+                const links = JSON.parse(linksText);
+                
+                if (!Array.isArray(links) || links.length === 0) {
+                    showError('Download links must be a non-empty array');
+                    return;
+                }
+                
+                currentVideoData.title = title;
+                currentVideoData.downloadLinks = links;
+                
+                // Display download links
+                displayDownloadLinks(links);
+                
+                // Load first video if available
+                if (links[0] && links[0].url) {
+                    loadDirectVideo(links[0].url, `${links[0].quality} (${links[0].size})`);
+                }
+                
+                document.getElementById('playerSection').style.display = 'block';
+                showSuccess(`Loaded ${links.length} download options`);
+                
+            } catch (error) {
+                showError('Invalid JSON format: ' + error.message);
+            }
+        }
+
+        function loadDirectVideo(url, description) {
+            try {
+                currentVideoData.currentSource = url;
+                
+                // Create video element
+                const video = document.createElement('video');
+                video.src = url;
+                video.controls = true;
+                video.autoplay = false;
+                video.style.width = '100%';
+                video.style.height = '100%';
+                
+                // Error handling for video
+                video.onerror = () => {
+                    showError('Error loading video: ' + url);
+                };
+                
+                video.onloadstart = () => {
+                    showSuccess('Loading video...');
+                };
+                
+                video.oncanplay = () => {
+                    showSuccess('Video ready to play!');
+                };
+                
+                // Clear and update player container
+                const container = document.getElementById('playerContainer');
+                const fullscreenBtn = container.querySelector('.fullscreen-btn');
+                container.innerHTML = '';
+                container.appendChild(fullscreenBtn);
+                container.appendChild(video);
+                
+                // Update UI
+                document.getElementById('sourceType').textContent = `Direct Video - ${description}`;
+                updatePlayerInfo();
+                
+            } catch (error) {
+                showError('Error loading video: ' + error.message);
+            }
+        }
+
+        function displayDownloadLinks(links) {
+            const container = document.getElementById('downloadLinksContainer');
+            container.innerHTML = '';
+            
+            links.forEach((link, index) => {
+                const linkElement = document.createElement('a');
+                linkElement.href = '#';
+                linkElement.className = 'download-link';
+                linkElement.onclick = (e) => {
+                    e.preventDefault();
+                    loadDirectVideo(link.url, `${link.quality} (${link.size})`);
+                };
+                
+                linkElement.innerHTML = `
+                    <div class="quality-badge">${link.quality}</div>
+                    <div>Size: ${link.size}</div>
+                    <div style="font-size: 12px; margin-top: 5px;">Click to play</div>
+                `;
+                
+                container.appendChild(linkElement);
+                
+                // Also add actual download link
+                const downloadElement = document.createElement('a');
+                downloadElement.href = link.url;
+                downloadElement.download = '';
+                downloadElement.className = 'download-link';
+                downloadElement.style.background = 'linear-gradient(45deg, #2d3436, #636e72)';
+                downloadElement.innerHTML = `
+                    <div class="quality-badge">📥 Download</div>
+                    <div>${link.quality} (${link.size})</div>
+                    <div style="font-size: 12px; margin-top: 5px;">Save to device</div>
+                `;
+                
+                container.appendChild(downloadElement);
+            });
+        }
+
+        function toggleFullscreen() {
+            const container = document.getElementById('playerContainer');
+            
+            if (!document.fullscreenElement) {
+                container.requestFullscreen().catch(err => {
+                    showError('Error enabling fullscreen: ' + err.message);
+                });
+            } else {
+                document.exitFullscreen();
+            }
+        }
+
+        function clearAll() {
+            // Clear inputs
+            document.getElementById('videoTitle').value = '';
+            document.getElementById('iframeUrl').value = '';
+            document.getElementById('downloadLinks').value = '';
+            
+            // Clear player
+            const container = document.getElementById('playerContainer');
+            const fullscreenBtn = container.querySelector('.fullscreen-btn');
+            container.innerHTML = '';
+            container.appendChild(fullscreenBtn);
+            
+            // Reset data
+            currentVideoData = {
+                title: '',
+                iframeUrl: '',
+                downloadLinks: [],
+                currentSource: null
+            };
+            
+            // Hide player section
+            document.getElementById('playerSection').style.display = 'none';
+            
+            showSuccess('All data cleared!');
+        }
+
+        // Auto-populate from URL parameters (for bot integration)
+        window.addEventListener('load', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            
+            if (urlParams.get('title')) {
+                document.getElementById('videoTitle').value = decodeURIComponent(urlParams.get('title'));
+            }
+            
+            if (urlParams.get('iframe')) {
+                document.getElementById('iframeUrl').value = decodeURIComponent(urlParams.get('iframe'));
+            }
+            
+            if (urlParams.get('downloads')) {
+                try {
+                    const downloads = JSON.parse(decodeURIComponent(urlParams.get('downloads')));
+                    document.getElementById('downloadLinks').value = JSON.stringify(downloads, null, 2);
+                } catch (e) {
+                    console.warn('Invalid downloads parameter:', e);
+                }
+            }
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey || e.metaKey) {
+                switch(e.key.toLowerCase()) {
+                    case 'enter':
+                        e.preventDefault();
+                        if (document.getElementById('iframeUrl').value) {
+                            loadIframe();
+                        } else if (document.getElementById('downloadLinks').value) {
+                            loadDownloadLinks();
+                        }
+                        break;
+                    case 'delete':
+                    case 'backspace':
+                        if (e.shiftKey) {
+                            e.preventDefault();
+                            clearAll();
+                        }
+                        break;
+                }
+            }
+            
+            if (e.key === 'f' || e.key === 'F') {
+                if (document.getElementById('playerSection').style.display !== 'none') {
+                    toggleFullscreen();
+                }
+            }
+        });
+    </script>
+</body>
+</html>
